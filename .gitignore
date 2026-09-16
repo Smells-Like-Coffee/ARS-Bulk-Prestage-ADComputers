@@ -1,0 +1,11 @@
+# Local configuration and Active Roles cache/export files
+config.ini
+*.ars
+
+# Vendor installation media is supplied separately
+Prerequisites/
+
+# Generated reports and logs
+ComputerImportResults_*.csv
+*.log
+*.tmp
