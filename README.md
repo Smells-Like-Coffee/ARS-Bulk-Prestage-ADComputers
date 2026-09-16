@@ -43,7 +43,43 @@ Have these ready:
 
 Keep the script, `config.ini`, and `Prerequisites` folder together. If you received an existing configuration, keep it rather than replacing it with the examples below.
 
-### First-time setup
+### Set up the Active Roles prerequisites
+
+Complete these steps on each Windows computer that will run the utility. The GitHub repository does **not** include the One Identity installers, and **Install All** does not download them.
+
+#### 1. Obtain the installation media
+
+Ask your Active Roles administrator for the **64-bit (x64) client installation media** approved for your environment. You need all three components below, together with their accompanying CAB files. Use components from the same approved release; this utility does not establish client/server version compatibility or install additional vendor runtime dependencies for you. If a vendor installer requests another dependency, follow the instructions supplied with that release before retrying.
+
+| Required component | Installer in the supplied media | Accompanying file |
+|---|---|---|
+| Active Roles ADSI Provider | `ADSI_x64.msi` | `ADSI_x64.cab` |
+| Active Roles SDK | `SDK_x64.msi` | `SDK_x64.cab` |
+| Active Roles Management Shell / PowerShell Module | `Shell_x64.msi` | `Shell_x64.cab` |
+
+Use the x64 packages, not the x86 packages. Installation requires Windows administrator approval or credentials. Active Roles access is a separate permission: the utility connects using the Windows account that launched it.
+
+#### 2. Prepare the folders for Install All
+
+Create a `Prerequisites` folder beside `ARS-Bulk-Prestage-ADComputers.ps1`. The current script expects the exact relative paths below, starting inside `Prerequisites`:
+
+| Component | Required MSI path |
+|---|---|
+| ADSI Provider | `ActiveRoles ADSI Provider - For exporting objects and reports\x64\ADSI\_x64.msi` |
+| SDK | `ActiveRoles ADSI Provider - For exporting objects and reports\x64\SDK\_x64.msi` |
+| PowerShell Module | `ActiveRoles Powershell Module\x64\Shell\_x64.msi` |
+
+If your media has `ADSI_x64.msi` and `SDK_x64.msi` directly in its `x64` folder, and `Shell_x64.msi` directly in the PowerShell `x64` folder, it does **not** yet match those paths. Prepare copies as follows:
+
+1. Copy `ADSI_x64.msi` and `ADSI_x64.cab` into the `x64\ADSI` folder. Rename only the copied MSI to `_x64.msi`.
+2. Copy `SDK_x64.msi` and `SDK_x64.cab` into the `x64\SDK` folder. Rename only the copied MSI to `_x64.msi`.
+3. Copy `Shell_x64.msi` and `Shell_x64.cab` into the `x64\Shell` folder. Rename only the copied MSI to `_x64.msi`.
+
+Keep CAB filenames unchanged and copy any additional supporting files required by your media into the corresponding component folder. Keep the original installation media intact. See the complete package layout at the end of this guide.
+
+#### 3. Install from the utility
+
+Launch `ARS-Bulk-Prestage-Launcher.exe` under the Windows account you intend to use for Active Roles work. Keep the EXE and PowerShell script together.
 
 Open **Tools → Active Roles Prerequisites** to see:
 
@@ -59,6 +95,31 @@ Open **Tools → Active Roles Prerequisites** to see:
 If an installer fails, later components are not installed. Review the result and the log location shown in the installation window. If a restart is requested, restart Windows and reopen the utility.
 
 The submenu also includes **Refresh Module / Prerequisite Status**. Installation credentials are handled by Windows; the utility continues using your original Windows account for Active Roles operations.
+
+#### 4. Verify readiness and connection
+
+1. After installation, reopen the utility if necessary and choose **Tools → Active Roles Prerequisites → Refresh Module / Prerequisite Status**.
+2. Confirm that ADSI Provider, SDK, and PowerShell Module are installed and that the module loads successfully. Hover over a component status for details. Complete any requested restart before importing.
+3. Enter your Active Roles server and Domain DN, then choose **Tools → Test Active Roles Connection**.
+4. Select a destination from your configured OU list and choose **Tools → Validate Destination OU**.
+
+An installed status confirms local component detection; a successful connection and OU validation still depend on network access, the server configuration, and your permissions.
+
+#### Alternative: install the components manually
+
+An administrator can run the original `ADSI_x64.msi`, then `SDK_x64.msi`, then `Shell_x64.msi` from the supplied media, keeping each MSI beside its CAB and other supporting files. Follow each installer to completion and stop if a component fails. Restart Windows if requested, then reopen the utility and perform the readiness checks above. Manually installed x64 components can be detected without preparing the utility's bundled-media folders.
+
+#### Prerequisite troubleshooting
+
+| Status or problem | What to do |
+|---|---|
+| **Missing - installer not found** | Check the exact MSI paths in step 2. Simply copying the original flat `x64` folders is insufficient for the current script. |
+| **Wrong installer** | Place the correct component's MSI in that component folder; the utility checks its product name. |
+| **Detection error** | Review the displayed details and check that the MSI is readable and complete. Obtain a fresh copy from your administrator if needed. |
+| **CAB/source file missing during installation** | Keep the matching CAB and other support files beside the MSI, with their original filenames. |
+| **Installation fails or is cancelled** | Review the displayed result and installer log location, resolve the cause, and retry. Later components are skipped after a failure. |
+| **Components installed but module unavailable** | Restart the utility, refresh status, and review the module error. Confirm that the x64 Management Shell and its vendor dependencies are installed. |
+| **Connection fails after installation** | Verify server name, network access, client/server compatibility with your administrator, and the launching user's Active Roles permissions. |
 
 ---
 
@@ -205,19 +266,24 @@ Keep this structure. The package can be moved to another location as long as the
 ```text
 ARS-Bulk-Prestage-ADComputers/
 ├── ARS-Bulk-Prestage-ADComputers.ps1
+├── ARS-Bulk-Prestage-Launcher.exe
+├── config.example.ini
 ├── config.ini
 ├── README.md
 └── Prerequisites/
     ├── ActiveRoles ADSI Provider - For exporting objects and reports/
     │   └── x64/
     │       ├── ADSI/
-    │       │   └── _x64.msi
+    │       │   ├── _x64.msi
+    │       │   └── ADSI_x64.cab
     │       └── SDK/
-    │           └── _x64.msi
+    │           ├── _x64.msi
+    │           └── SDK_x64.cab
     └── ActiveRoles Powershell Module/
         └── x64/
             └── Shell/
-                └── _x64.msi
+                ├── _x64.msi
+                └── Shell_x64.cab
 ```
 
 Keep any accompanying installer files, such as CAB files, in their supplied component folders. A separately supplied launcher may also be included in the package.
